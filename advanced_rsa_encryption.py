@@ -6,124 +6,115 @@ class RSAEncryption:
     # Parameters to print private & public
     # Ex. RSAEncryption.private_key
     import random
-    private_key = ""
+    privat_key = ""
     public_key = ""
-
     def __init__(self):
         pass
 
-    # This is not really optimized and uses a loop to test prime-numbers. So don't do anything crazy.
-    def generate_keys(self, low_prime_num, high_prime_num):
+    def is_prime(self, num):
+
+        if num == 2:
+            return True
+        if num < 2 or num % 2 == 0:
+            return False
+        for n in range(3, int(num ** 0.5) + 2, 2):
+            if num % n == 0:
+                return False
+        return True
+
+    def generate_random_prime(self, max_prime_length):
+        while 1:
+            ran_prime = self.random.randint(0, max_prime_length)
+            if self.is_prime(ran_prime):
+                return ran_prime
+
+    def gcd(self, a, b):
+        while b != 0:
+            a, b = b, a % b
+        return a
+
+    def egcd(self, a, b):
+        if a == 0:
+            return(b, 0, 1)
+        else:
+            g, y, x = self.egcd(b % a, a)
+            return (g, x - (b // a) * y, y)
+
+    def generate_keys(self):
         """
         Method for key generation
-        :param low_prime_num: lowest price number range (int)
-        :param high_prime_num: highest prime number range (int)
-        :return: Prints privatekey, publickey and modulus.
+        :return: publickey, and privatekey with modulus (tuple)
         """
-
         # D value in blog post.
+
         self.private_key = ""
         self.public_key = ""
-        avail_prime = []
-        e_avail_prime = []
 
-        # Generating some prime numbers.
-        for num in range(low_prime_num, high_prime_num + 1):
-           # all prime numbers are greater than 1
-            if num > 1:
-                for i in range(2, num):
-                    if (num % i) == 0:
-                        break
-                else:
-                    avail_prime.append(num)  
-                    
-        # Selecting an index for avail prime. Can't select the last number.
-        low_prime_rand = self.random.randrange(0, len(avail_prime) - 1)
-        # Make it so the higher prime is higher then low prime.
-        high_prime_rand = self.random.randrange(low_prime_rand, len(avail_prime))
+        p = self.generate_random_prime(10000000000)
+        q = self.generate_random_prime(10000000000)
 
-        p = avail_prime[low_prime_rand]
-        q = avail_prime[high_prime_rand]
-        print("P = ", p)
-        print("Q = ", q)
-        
-        modulus = p*q
-        f_mod = (p-1)*(q-1)
-        print("Mod= ",modulus)
-        print("f_Mod= ",f_mod)
-        
-        # Now the public key is done, and for RSA its usally 65537.
-        #The public keys is the same in most cases its the modulus thats the diffrence.
-        self.public_key = 181
-        print("E = 181")
+        modulus = p * q
+        print("Modulus ", modulus)
+        f_mod = (p - 1) * (q - 1)
+        print("F_mod ", f_mod)
 
-        # We no have to find the D value and we use Modular multiplicative inverse toS do so.
-        for i in range(0, 1000):
-            x = E*i
-            if x % F == 1:
-                self.private_key = i
-        print("D = ", self.private_key)
+        # Next is to find co-prime to modulus
+        self.public_key = self.random.randint(1, f_mod)
+        g = self.gcd(self.public_key, f_mod)
+        while g != 1:
+            self.public_key = self.random.randint(1, f_mod)
+            g = self.gcd(self.public_key, f_mod)
 
-        # Return priv/pubkey and mod
-        print("Publickey: {}\nPrivatekey: {}\nModulus: {}".format(self.public_key, self.private_key, modulus))
-    
+        print("public_key=", self.public_key, " ", "modulus=", modulus)
+        # Next we have to find the private key.
+        # For that we use multiplication inverse.
+        self.private_key = self.egcd(self.public_key, f_mod)[1]
+
+        # Check that d is positiv.
+        self.private_key = self.private_key % f_mod
+        if self.private_key < 0:
+            self.privat_key += f_mod
+
+        return (self.private_key, modulus), (self.public_key, modulus)
+    1000000000000
+
     @staticmethod
-    def encrypt(pubkey, message, modulus):
+    def encrypt(text, public_key):
         """
         Method for encryption
-        :param pubkey:  public-key (int)
+        :param public_key:  Publickey and modulus (tuple, int)
         :param message: The message you want to encrypt (string)
-        :param modulus: What modulus you want to use for the encryption
         :return: Message (string)
         """
-        # Lets first deal with the message
-        # Split the message
-        split_message = [char for char in message]
-        #convert the message into ascii decmial
-        converted_message = [ord(x) for x in split_message]
-        
-        # Creating a new list with the encrypted message.
-        encrypted_message = []
-        for i in converted_message:
-            p = int(i)**int(pubkey) % modulus
-            encrypted_message.append(p)
-
-        # Return the message.
-        return encrypted_message
+        # Converts the char to ascii decimal and then performs encryption.
+        key, n = public_key
+        ctext = [pow(ord(char), key, n) for char in text]
+        return ctext
 
     @staticmethod
-    def decrypt(privkey, message, modulus):
+    def decrypt(ctext, private_key):
         """
         Method for decryption
-        :param privkey:  private-key (int)
-        :param message: The message you want to decrypt (int, split the numbers with , ex: 73, 45, 59
-        :param modulus: What modulus you want to use for the decryption (int)
+        :param private_key:  Privatekey and modulus (tuple, int)
+        :param emessage: The message you want to decrypt (list, int)
         :return: Message (string)
         """
-        # First we have to create a list with the message.
-        split_encrypted_message = message.split(",") 
-        # Decrypting
-        decrypted_ascii_message = []
-        for j in split_encrypted_message:
-            p =int(j)**int(privkey) % modulus
-            decrypted_ascii_message.append(p)
-
-        # Converting into string
-        print(decrypted_ascii_message)
-        #decrypted_message = [chr(int(x, 16)) for x in encrypted_ascii_message]
-
-        # Return string
-        #return "".join(decrypted_message)
+        # Creates a list with all the characters in the text and performs the decryption
+        try:
+            key, n = private_key
+            text = [chr(pow(char, key, n)) for char in ctext]
+            return "".join(text)
+        except TypeError as e:
+            print(e)
 
 
-def main():
-    #a = RSAEncryption()
-    #a.generate_keys(1, 20)
-    #print(a.encrypt(181, "times when i cant really answer any message because there are times like these", 221))
-    #b = input("What would you like encrypted or decrypted?(Separate numbers with ',' for decryption):")
-    #print(a.decrypt(925, b, 221))
-    
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    a = RSAEncryption()
+    public_key, private_key = a.generate_keys()
+    print("Public: ", public_key)
+    print("Private: ", private_key)
+    message = RSAEncryption.encrypt("This is the time we are going to have sex so lets have ti and lets not stop and saying ",
+                    public_key)
+    print("encrypted  =", message)
+    plaintext = RSAEncryption.decrypt(message, private_key)
+    print("decrypted =", plaintext)
