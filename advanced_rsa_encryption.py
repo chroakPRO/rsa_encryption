@@ -1,3 +1,7 @@
+from _typeshed import Self
+from typing import Tuple, List, Dict
+
+
 class RSAEncryption:
     """
     RSA Encryption class.
@@ -6,12 +10,13 @@ class RSAEncryption:
     # Parameters to print private & public
     # Ex. RSAEncryption.private_key
     import random
-    privat_key = ""
-    public_key = ""
+    from typing import Dict, Set, List, Tuple
+    privat_key: str = ""
+    public_key: str = ""
     def __init__(self):
         pass
 
-    def is_prime(self, num):
+    def is_prime(self, num: int) -> bool:
 
         if num == 2:
             return True
@@ -22,36 +27,36 @@ class RSAEncryption:
                 return False
         return True
 
-    def generate_random_prime(self, max_prime_length):
+    def generate_random_prime(self, max_prime_length: int) -> int:
         while 1:
             ran_prime = self.random.randint(0, max_prime_length)
             if self.is_prime(ran_prime):
                 return ran_prime
 
-    def gcd(self, a, b):
+    def gcd(self, a: int, b: int) -> int:
         while b != 0:
             a, b = b, a % b
         return a
 
-    def egcd(self, a, b):
+    def egcd(self, a: int, b: int) -> int:
         if a == 0:
             return(b, 0, 1)
         else:
             g, y, x = self.egcd(b % a, a)
             return (g, x - (b // a) * y, y)
 
-    def generate_keys(self):
+    def generate_keys(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """
         Method for key generation
         :return: publickey, and privatekey with modulus (tuple)
         """
         # D value in blog post.
 
-        self.private_key = ""
-        self.public_key = ""
+        self.private_key: int = ""
+        self.public_key: int = ""
 
-        p = self.generate_random_prime(10000000000)
-        q = self.generate_random_prime(10000000000)
+        p: int = self.generate_random_prime(10000000000)
+        q: int = self.generate_random_prime(10000000000)
 
         modulus = p * q
         print("Modulus ", modulus)
@@ -76,10 +81,9 @@ class RSAEncryption:
             self.privat_key += f_mod
 
         return (self.private_key, modulus), (self.public_key, modulus)
-    1000000000000
 
     @staticmethod
-    def encrypt(text, public_key):
+    def encrypt(text, public_key: Tuple[int, int]) -> str:
         """
         Method for encryption
         :param public_key:  Publickey and modulus (tuple, int)
@@ -92,7 +96,7 @@ class RSAEncryption:
         return ctext
 
     @staticmethod
-    def decrypt(ctext, private_key):
+    def decrypt(ctext, private_key: Tuple[int, int]) -> str:
         """
         Method for decryption
         :param private_key:  Privatekey and modulus (tuple, int)
@@ -109,12 +113,12 @@ class RSAEncryption:
 
 
 if __name__ == '__main__':
-    a = RSAEncryption()
-    public_key, private_key = a.generate_keys()
+    a: object = RSAEncryption()
+    public_key, private_key = a.generate_keys() # gen_keys . return Tuple[int, int]
     print("Public: ", public_key)
     print("Private: ", private_key)
-    message = RSAEncryption.encrypt("This is the time we are going to have sex so lets have ti and lets not stop and saying ",
+    message: str = RSAEncryption.encrypt("This is the time we are going to have sex so lets have ti and lets not stop and saying ",
                     public_key)
     print("encrypted  =", message)
-    plaintext = RSAEncryption.decrypt(message, private_key)
+    plaintext: str = RSAEncryption.decrypt(message, private_key)
     print("decrypted =", plaintext)
